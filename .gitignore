@@ -48,6 +48,8 @@ build/
 # Environment
 .env
 *.env
+!.env.production
+!config/.env.example
 
 # Logs
 *.log

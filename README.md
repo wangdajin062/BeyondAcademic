@@ -4,6 +4,36 @@
 
 BeyondAcademic is a comprehensive academic writing platform that combines powerful editing tools with AI-assisted features to enhance the quality and efficiency of scholarly writing.
 
+## 🚀 Quick Deployment / 快速部署
+
+### Option 1: One-Command Deployment (推荐 / Recommended)
+
+```bash
+# 下载并运行部署脚本 / Download and run deployment script
+curl -fsSL https://raw.githubusercontent.com/wangdajin062/BeyondAcademic/main/deploy.sh | sudo bash
+```
+
+### Option 2: Docker Deployment (Docker部署)
+
+```bash
+# 克隆仓库 / Clone repository
+git clone https://github.com/wangdajin062/BeyondAcademic.git
+cd BeyondAcademic
+
+# 配置环境 / Configure environment
+cp .env.production .env
+# 编辑 .env 文件 / Edit .env file
+
+# 启动服务 / Start services
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### Option 3: Manual Deployment (手动部署)
+
+详细步骤请参考 / See detailed steps in: [DEPLOYMENT.md](DEPLOYMENT.md)
+
+---
+
 ## System Architecture
 
 The system follows a **modular academic writing architecture**, structured into three primary components:
@@ -253,11 +283,82 @@ BeyondAcademic/
 - [x] Central Academic Editor
 - [x] AI-Assisted Knowledge Recommendation
 - [x] Backend AI Capability Middleware
-- [ ] Database integration (PostgreSQL)
-- [ ] User authentication (JWT/OAuth2)
+- [x] Production deployment guides (Docker & Manual)
+- [x] Database migration scripts
+- [x] Security hardening documentation
+- [ ] Database integration (PostgreSQL) - Scripts ready
+- [ ] User authentication (JWT/OAuth2) - Template provided
 - [ ] Real-time collaboration
 - [ ] Advanced AI model integration (GPT-4, specialized academic models)
 - [ ] Mobile application
+
+## Production Deployment / 生产部署
+
+### 🚀 Quick Start
+
+**一键部署 / One-Command Deployment:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/wangdajin062/BeyondAcademic/main/deploy.sh | sudo bash
+```
+
+### 📋 Deployment Options / 部署选项
+
+1. **Docker部署 / Docker Deployment** (推荐 / Recommended)
+   - 快速启动 / Quick start
+   - 自动配置 / Auto-configuration
+   - 易于维护 / Easy maintenance
+   - 详见 / See: [docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md)
+
+2. **手动部署 / Manual Deployment**
+   - 完全控制 / Full control
+   - 自定义配置 / Custom configuration
+   - 详细步骤 / Detailed steps: [DEPLOYMENT.md](DEPLOYMENT.md)
+
+### 📦 What's Included / 包含内容
+
+- ✅ **Docker Compose配置** - 生产环境容器编排
+- ✅ **Nginx配置** - 反向代理和SSL
+- ✅ **数据库迁移脚本** - PostgreSQL初始化
+- ✅ **Gunicorn配置** - 生产级WSGI服务器
+- ✅ **自动化部署脚本** - 一键部署
+- ✅ **环境变量模板** - 安全配置
+- ✅ **备份脚本** - 数据保护
+- ✅ **监控和日志** - 运维支持
+
+### 🔒 Security Features / 安全特性
+
+- ✅ SSL/TLS加密 (Let's Encrypt自动配置)
+- ✅ 防火墙配置
+- ✅ 限流保护
+- ✅ 安全头配置
+- ✅ 环境变量加密
+- ✅ 数据库连接池
+- ✅ 自动备份
+
+### 📊 System Requirements / 系统要求
+
+**最低配置 / Minimum:**
+- CPU: 4核心 / 4 cores
+- 内存 / RAM: 8GB
+- 存储 / Storage: 50GB SSD
+
+**推荐配置 / Recommended:**
+- CPU: 8核心 / 8 cores  
+- 内存 / RAM: 16GB
+- 存储 / Storage: 100GB SSD
+
+### 🔧 Post-Deployment / 部署后配置
+
+1. 配置环境变量 / Configure environment variables
+2. 设置SSL证书 / Setup SSL certificates
+3. 配置备份 / Configure backups
+4. 启用监控 / Enable monitoring
+5. 测试健康检查 / Test health checks
+
+详细文档 / Detailed documentation:
+- [DEPLOYMENT.md](DEPLOYMENT.md) - 完整部署指南
+- [SECURITY.md](SECURITY.md) - 安全配置
+- [docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md) - Docker部署
 
 ## Security Considerations
 
