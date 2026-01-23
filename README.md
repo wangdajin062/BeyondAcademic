@@ -270,6 +270,22 @@ BeyondAcademic/
 5. **HTTPS**: Ensure all API calls are over HTTPS
 6. **Environment Variables**: Store sensitive data (API keys, secrets) in environment variables
 7. **Database Security**: Use connection pooling and prepared statements
+8. **Dependency Updates**: Regularly update dependencies to patch security vulnerabilities
+
+### Dependency Security
+
+All dependencies have been updated to patched versions to address known vulnerabilities:
+- `aiohttp>=3.13.3` - Fixed zip bomb, DoS, and directory traversal vulnerabilities
+- `fastapi>=0.109.1` - Fixed ReDoS vulnerability
+- `python-multipart>=0.0.18` - Fixed DoS and ReDoS vulnerabilities
+- `torch>=2.6.0` - Fixed buffer overflow, use-after-free, and RCE vulnerabilities
+- `transformers>=4.48.0` - Fixed deserialization vulnerabilities
+
+**Recommendation**: Regularly check for security updates using tools like:
+```bash
+pip install safety
+safety check
+```
 
 See `config/.env.example` for configuration templates.
 
