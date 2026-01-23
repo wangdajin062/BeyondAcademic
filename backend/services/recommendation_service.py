@@ -2,7 +2,7 @@
 Recommendation Service
 AI-powered literature and knowledge recommendation system
 """
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from pydantic import BaseModel
 from enum import Enum
 from datetime import datetime
@@ -209,7 +209,7 @@ class RecommendationService:
             clarity_score=clarity_score
         )
     
-    async def optimize_paragraph(self, paragraph: str) -> Dict[str, any]:
+    async def optimize_paragraph(self, paragraph: str) -> Dict[str, Any]:
         """
         Optimize an entire paragraph
         

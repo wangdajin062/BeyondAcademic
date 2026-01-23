@@ -3,7 +3,7 @@ Recommendation API Router
 Provides endpoints for AI-powered literature recommendations and language optimization
 """
 from fastapi import APIRouter, Query
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from pydantic import BaseModel
 from services.recommendation_service import (
     recommendation_service, 
@@ -88,7 +88,7 @@ async def optimize_sentence(request: SentenceOptimizationRequest):
     return optimization
 
 
-@router.post("/optimize/paragraph", response_model=Dict[str, any])
+@router.post("/optimize/paragraph", response_model=Dict[str, Any])
 async def optimize_paragraph(request: ParagraphOptimizationRequest):
     """
     Optimize an entire paragraph

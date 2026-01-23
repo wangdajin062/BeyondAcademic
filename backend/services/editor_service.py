@@ -3,7 +3,7 @@ Editor Service
 Provides academic editing capabilities including grammar correction,
 formatting guidance, and LaTeX support
 """
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from pydantic import BaseModel
 from enum import Enum
 
@@ -188,7 +188,7 @@ class EditorService:
         """Get formatting rules for a specific template"""
         return self.formatting_rules.get(template, [])
     
-    async def validate_citations(self, text: str) -> Dict[str, any]:
+    async def validate_citations(self, text: str) -> Dict[str, Any]:
         """
         Validate citation formatting
         

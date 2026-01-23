@@ -3,7 +3,7 @@ Academic Editor API Router
 Provides endpoints for grammar checking, formatting, and LaTeX support
 """
 from fastapi import APIRouter, HTTPException
-from typing import List, Dict
+from typing import List, Dict, Any
 from pydantic import BaseModel
 from services.editor_service import editor_service, Suggestion, FormattingRule
 
@@ -89,7 +89,7 @@ async def get_formatting_rules(template: str):
     return rules
 
 
-@router.post("/validate/citations", response_model=Dict[str, any])
+@router.post("/validate/citations", response_model=Dict[str, Any])
 async def validate_citations(request: TextCheckRequest):
     """
     Validate citation formatting
