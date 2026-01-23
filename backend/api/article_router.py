@@ -18,6 +18,9 @@ async def create_article(article_data: ArticleCreate, author: str = "default_use
     """
     Create a new article
     
+    NOTE: In production, replace the 'author' parameter with proper authentication.
+    Use JWT tokens or OAuth2 to identify users securely.
+    
     - **title**: Article title (required)
     - **abstract**: Article abstract (optional)
     - **content**: Initial content (optional)
@@ -75,6 +78,8 @@ async def update_article(
 ):
     """
     Update an article
+    
+    NOTE: In production, replace the 'author' parameter with proper authentication.
     
     If content is updated, a new version is automatically created
     """

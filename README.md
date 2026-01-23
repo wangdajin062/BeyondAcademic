@@ -253,11 +253,25 @@ BeyondAcademic/
 - [x] Central Academic Editor
 - [x] AI-Assisted Knowledge Recommendation
 - [x] Backend AI Capability Middleware
-- [ ] Database integration
-- [ ] User authentication
+- [ ] Database integration (PostgreSQL)
+- [ ] User authentication (JWT/OAuth2)
 - [ ] Real-time collaboration
-- [ ] Advanced AI model integration
+- [ ] Advanced AI model integration (GPT-4, specialized academic models)
 - [ ] Mobile application
+
+## Security Considerations
+
+**Important**: The current implementation uses a simplified authentication approach for development purposes. For production deployment:
+
+1. **Authentication**: Replace the `author` parameter with proper JWT or OAuth2 authentication
+2. **Authorization**: Implement role-based access control for articles
+3. **Input Validation**: Enhanced validation for all user inputs
+4. **Rate Limiting**: Implement API rate limiting to prevent abuse
+5. **HTTPS**: Ensure all API calls are over HTTPS
+6. **Environment Variables**: Store sensitive data (API keys, secrets) in environment variables
+7. **Database Security**: Use connection pooling and prepared statements
+
+See `config/.env.example` for configuration templates.
 
 ## Contributing
 

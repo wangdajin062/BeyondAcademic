@@ -119,7 +119,9 @@ class RecommendationService:
         elif recommendation_type == RecommendationType.RECENT:
             results.sort(key=lambda p: p.year, reverse=True)
         elif recommendation_type == RecommendationType.HIGH_IMPACT:
-            results.sort(key=lambda p: p.citations / max(2024 - p.year, 1), reverse=True)
+            # Calculate impact factor as citations per year since publication
+            current_year = datetime.now().year
+            results.sort(key=lambda p: p.citations / max(current_year - p.year, 1), reverse=True)
         else:
             results.sort(key=lambda p: p.relevance_score, reverse=True)
         

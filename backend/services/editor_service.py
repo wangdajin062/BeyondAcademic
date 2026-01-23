@@ -78,7 +78,12 @@ class EditorService:
         """
         Check text for grammar errors
         
-        In production, this would integrate with advanced NLP models
+        NOTE: This is a simplified implementation for demonstration.
+        In production, integrate with advanced NLP models like:
+        - LanguageTool API
+        - Grammarly API
+        - GPT-based grammar checkers
+        - spaCy with custom models
         """
         suggestions = []
         
