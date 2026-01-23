@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeyondAcademic - 用户登录系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: '微软雅黑', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            width: 900px;
+            max-width: 100%;
+        }
+
+        .left-panel {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 40%;
+            min-height: 500px;
+        }
+
+        .left-panel h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        .left-panel p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .features {
+            list-style: none;
+        }
+
+        .features li {
+            padding: 10px 0;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        .features li:before {
+            content: "✓ ";
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .right-panel {
+            padding: 40px;
+            width: 60%;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: #999;
+            font-weight: 500;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+        }
+
+        .tab-btn.active::after {
+            content: "";
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .tab-btn:hover {
+            color: #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .test-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+
+        .test-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .test-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            transition: background 0.3s;
+        }
+
+        .test-button:hover {
+            background: #764ba2;
+        }
+
+        .test-result {
+            margin-top: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+            display: none;
+        }
+
+        .test-result.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                width: 100%;
+                max-width: 400px;
+            }
+
+            .left-panel {
+                width: 100%;
+                padding: 30px 20px;
+                min-height: auto;
+            }
+
+            .right-panel {
+                width: 100%;
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <h1>BeyondAcademic</h1>
+            <p>一鲸落，万物生</p>
+            <!-- TODO: 插入图片（例如 Logo 或插画） -->
+        </div>
+
+        <div class="right-panel">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('login')">登录</button>
+                <button class="tab-btn" onclick="switchTab('register')">注册</button>
+            </div>
+
+            <!-- 登录表单 -->
+            <div id="login" class="form-section active">
+                <div id="login-message" class="message"></div>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="login-username">用户名</label>
+                        <input type="text" id="login-username" name="username" required placeholder="请输入用户名">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">密码</label>
+                        <input type="password" id="login-password" name="password" required placeholder="请输入密码">
+                    </div>
+                    <button type="submit" class="submit-btn" id="login-btn">登录</button>
+                </form>
+            </div>
+
+            <!-- 注册表单 -->
+            <div id="register" class="form-section">
+                <div id="register-message" class="message"></div>
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label for="register-username">用户名</label>
+                        <input type="text" id="register-username" name="username" required placeholder="请输入用户名">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">密码</label>
+                        <input type="password" id="register-password" name="password" required placeholder="请输入密码">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-confirm">确认密码</label>
+                        <input type="password" id="register-confirm" name="confirm" required placeholder="请再次输入密码">
+                    </div>
+                    <button type="submit" class="submit-btn" id="register-btn">注册</button>
+                </form>
+            </div>
+
+           
+        </div>
+    </div>
+
+    <script>
+        // 配置
+        const API_URL = 'http://localhost:8080/api';
+        const SERVER_PORT = 9999;
+
+        // 切换标签页
+        function switchTab(tabName) {
+            // 隐藏所有表单
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // 移除所有按钮的active类
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // 显示选中的表单
+            document.getElementById(tabName).classList.add('active');
+
+            // 激活选中的按钮
+            event.target.classList.add('active');
+        }
+
+        // 显示消息
+        function showMessage(elementId, message, type) {
+            const messageEl = document.getElementById(elementId);
+            messageEl.textContent = message;
+            messageEl.className = 'message ' + type;
+            messageEl.style.display = 'block';
+        }
+
+        // 清空消息
+        function clearMessage(elementId) {
+            const messageEl = document.getElementById(elementId);
+            messageEl.className = 'message';
+            messageEl.style.display = 'none';
+        }
+
+        // 处理登录
+        async function handleLogin(event) {
+            event.preventDefault();
+            clearMessage('login-message');
+
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+
+            if (!username || !password) {
+                showMessage('login-message', '用户名和密码不能为空', 'error');
+                return;
+            }
+
+            const loginBtn = document.getElementById('login-btn');
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="loading"></span> 登录中...';
+
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('login-message', '✓ 登录成功！欢迎 ' + username, 'success');
+                    document.getElementById('login-username').value = '';
+                    document.getElementById('login-password').value = '';
+                    
+                    // 3秒后提示
+                    setTimeout(() => {
+                        showMessage('login-message', '您已成功登录系统', 'success');
+                    }, 500);
+                } else {
+                    showMessage('login-message', '❌ ' + data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('login-message', '❌ 请求失败: ' + error.message, 'error');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = '登录';
+            }
+        }
+
+        // 处理注册
+        async function handleRegister(event) {
+            event.preventDefault();
+            clearMessage('register-message');
+
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value.trim();
+            const confirm = document.getElementById('register-confirm').value.trim();
+
+            if (!username || !password || !confirm) {
+                showMessage('register-message', '所有字段都不能为空', 'error');
+                return;
+            }
+
+            if (password !== confirm) {
+                showMessage('register-message', '两次输入的密码不一致', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage('register-message', '密码长度至少6位', 'error');
+                return;
+            }
+
+            const registerBtn = document.getElementById('register-btn');
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '<span class="loading"></span> 注册中...';
+
+            try {
+                const response = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('register-message', '✓ 注册成功！请使用新账号登录', 'success');
+                    document.getElementById('register-username').value = '';
+                    document.getElementById('register-password').value = '';
+                    document.getElementById('register-confirm').value = '';
+
+                    // 2秒后切换到登录页
+                    setTimeout(() => {
+                        document.querySelector('[onclick="switchTab(\'login\')"]').click();
+                    }, 2000);
+                } else {
+                    showMessage('register-message', '❌ ' + data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('register-message', '❌ 请求失败: ' + error.message, 'error');
+            } finally {
+                registerBtn.disabled = false;
+                registerBtn.textContent = '注册';
+            }
+        }
+
+        // 测试登录
+        async function testLogin() {
+            showTestResult('🔄 测试中...');
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: 'admin', password: 'admin123' })
+                });
+                const data = await response.json();
+                showTestResult(`✓ 测试成功\n${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                showTestResult(`❌ 测试失败\n${error.message}`);
+            }
+        }
+
+        // 测试注册
+        async function testRegister() {
+            const testUsername = 'testuser_' + Date.now();
+            showTestResult('🔄 测试中...');
+            try {
+                const response = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: testUsername, password: 'test123456' })
+                });
+                const data = await response.json();
+                showTestResult(`✓ 注册测试完成\n用户名: ${testUsername}\n${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                showTestResult(`❌ 测试失败\n${error.message}`);
+            }
+        }
+
+        // 测试服务器状态
+        async function testServerStatus() {
+            showTestResult('🔄 检查中...');
+            try {
+                const response = await fetch(`${API_URL}/status`);
+                const data = await response.json();
+                showTestResult(`✓ 服务器正常运行\n${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                showTestResult(`❌ 无法连接到服务器\n${error.message}\n\n请确保后端服务器已启动`);
+            }
+        }
+
+        // 显示测试结果
+        function showTestResult(result) {
+            const resultEl = document.getElementById('test-result');
+            resultEl.textContent = result;
+            resultEl.classList.add('show');
+        }
+
+        // 页面加载时检查服务器
+        window.addEventListener('load', async () => {
+            console.log('页面加载完成，检查服务器状态...');
+            try {
+                const response = await fetch(`${API_URL}/status`);
+                if (response.ok) {
+                    console.log('✓ 服务器连接成功');
+                }
+            } catch (error) {
+                console.warn('⚠ 无法连接到后端服务器，请确保已启动', error);
+            }
+        });
+    </script>
+</body>
+</html>
