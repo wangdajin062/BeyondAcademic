@@ -6,6 +6,7 @@ formatting guidance, and LaTeX support
 from typing import List, Dict, Optional, Any
 from pydantic import BaseModel
 from enum import Enum
+import re
 
 
 class SuggestionType(str, Enum):
@@ -96,17 +97,28 @@ class EditorService:
         }
         
         for error, correction in common_errors.items():
-            pos = text.find(error)
-            if pos != -1:
+            for match in re.finditer(re.escape(error), text, flags=re.IGNORECASE):
                 suggestions.append(Suggestion(
                     type=SuggestionType.GRAMMAR,
-                    position=pos,
-                    length=len(error),
-                    original=error,
+                    position=match.start(),
+                    length=len(match.group(0)),
+                    original=match.group(0),
                     suggestion=correction,
-                    explanation=f"Replace '{error}' with '{correction}'",
+                    explanation=f"Replace '{match.group(0)}' with '{correction}'",
                     confidence=0.95
                 ))
+
+        # Lightweight subject-verb agreement check common in demo content
+        for match in re.finditer(r"\bresults\s+shows\b", text, flags=re.IGNORECASE):
+            suggestions.append(Suggestion(
+                type=SuggestionType.GRAMMAR,
+                position=match.start(),
+                length=len(match.group(0)),
+                original=match.group(0),
+                suggestion="results show",
+                explanation="Plural subject 'results' should use 'show'.",
+                confidence=0.90
+            ))
         
         return suggestions
     

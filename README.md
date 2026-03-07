@@ -9,8 +9,12 @@ BeyondAcademic is a comprehensive academic writing platform that combines powerf
 ### Option 1: One-Command Deployment (推荐 / Recommended)
 
 ```bash
-# 下载并运行部署脚本 / Download and run deployment script
+# 交互式部署 / Interactive deployment
 curl -fsSL https://raw.githubusercontent.com/wangdajin062/BeyondAcademic/main/deploy.sh | sudo bash
+
+# 非交互部署（推荐自动化）/ Non-interactive deployment (for automation)
+curl -fsSL https://raw.githubusercontent.com/wangdajin062/BeyondAcademic/main/deploy.sh | \
+  sudo DOMAIN=your-domain.com SERVER_IP=your-server-ip CONFIGURE_SSL=y EMAIL=ops@your-domain.com WWW_DOMAIN=false bash
 ```
 
 ### Option 2: Docker Deployment (Docker部署)
@@ -31,6 +35,17 @@ docker compose -f docker-compose.prod.yml up -d
 ### Option 3: Manual Deployment (手动部署)
 
 详细步骤请参考 / See detailed steps in: [DEPLOYMENT.md](DEPLOYMENT.md)
+
+### Option 4: Alibaba Cloud ECS Deployment (阿里云部署)
+
+See: [docs/ALIYUN_DEPLOYMENT.md](docs/ALIYUN_DEPLOYMENT.md)
+
+```bash
+DOMAIN=your-domain.com SERVER_IP=your-server-ip EMAIL=ops@your-domain.com ./scripts/deploy_aliyun_ecs.sh
+
+# Example for this project request
+DOMAIN=haerb.org.cn SERVER_IP=8.155.168.97 EMAIL=ops@haerb.org.cn WWW_DOMAIN=false ./scripts/deploy_aliyun_ecs.sh
+```
 
 ---
 
@@ -401,3 +416,15 @@ This project is for academic use and research purposes.
 ---
 
 **BeyondAcademic** - Enhancing Academic Writing with AI
+
+## Test Login Page
+
+A lightweight test login flow is now available for deployment verification.
+
+- **Frontend page**: `frontend/src/components/LoginPage.tsx`
+- **Backend endpoint**: `POST /api/auth/test-login`
+- **Test accounts**:
+  - `tester / test123456`
+  - `researcher / Research@2026`
+
+> This endpoint is intended for integration testing only and should be replaced with real authentication in production.
