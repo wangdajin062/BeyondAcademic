@@ -401,3 +401,15 @@ This project is for academic use and research purposes.
 ---
 
 **BeyondAcademic** - Enhancing Academic Writing with AI
+
+## Test Login Page
+
+A lightweight test login flow is now available for deployment verification.
+
+- **Frontend page**: `frontend/src/components/LoginPage.tsx`
+- **Backend endpoint**: `POST /api/auth/test-login`
+- **Test accounts**:
+  - `tester / test123456`
+  - `researcher / Research@2026`
+
+> This endpoint is intended for integration testing only and should be replaced with real authentication in production.
