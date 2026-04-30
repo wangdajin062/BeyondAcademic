@@ -1,151 +1,195 @@
 #!/bin/bash
-# BeyondAcademic生产环境快速部署脚本 / Quick Production Deployment Script
+# BeyondAcademic 一键部署脚本 / One-Click Deployment Script
+# 支持管道执行 / Supports piped execution: curl -fsSL <url> | sudo bash
+#
+# 环境变量配置 / Environment variable overrides:
+#   DOMAIN          - 域名 (default: server IP)
+#   INSTALL_DIR     - 安装目录 (default: /opt/beyondacademic)
+#   CONFIGURE_SSL   - 配置SSL yes/no (default: no)
+#   SSL_EMAIL       - SSL证书邮箱 (required if CONFIGURE_SSL=yes)
+#   DB_PASSWORD     - 数据库密码 (auto-generated if unset)
+#   SECRET_KEY      - 应用密钥 (auto-generated if unset)
+#   HTTP_PORT       - HTTP端口 (default: 80)
 
-set -e
+set -euo pipefail
 
-echo "=================================="
-echo "BeyondAcademic生产部署 / Production Deployment"
-echo "=================================="
+# ── Colors ──────────────────────────────────────────────────────────────────
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
+info()    { echo -e "${BLUE}[INFO]${NC}  $*"; }
+success() { echo -e "${GREEN}[OK]${NC}    $*"; }
+warn()    { echo -e "${YELLOW}[WARN]${NC}  $*"; }
+error()   { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 
-# 颜色定义 / Color definitions
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# 检查是否为root用户 / Check if running as root
+# ── Root check ───────────────────────────────────────────────────────────────
 if [[ $EUID -ne 0 ]]; then
-   echo -e "${RED}此脚本需要root权限运行 / This script must be run as root${NC}" 
-   echo "请使用: sudo $0"
-   exit 1
+  error "This script must be run as root. Use: sudo bash deploy.sh"
+  exit 1
 fi
 
-# 获取域名 / Get domain name
-read -p "请输入您的域名 (例如: example.com) / Enter your domain (e.g., example.com): " DOMAIN
+echo ""
+echo -e "${BLUE}╔══════════════════════════════════════════╗${NC}"
+echo -e "${BLUE}║   BeyondAcademic  ·  Auto Deployment     ║${NC}"
+echo -e "${BLUE}╚══════════════════════════════════════════╝${NC}"
+echo ""
 
-if [ -z "$DOMAIN" ]; then
-    echo -e "${RED}域名不能为空 / Domain cannot be empty${NC}"
-    exit 1
-fi
+# ── Configuration (env overrides or safe defaults) ───────────────────────────
+INSTALL_DIR="${INSTALL_DIR:-/opt/beyondacademic}"
+HTTP_PORT="${HTTP_PORT:-80}"
+CONFIGURE_SSL="${CONFIGURE_SSL:-no}"
 
-echo -e "${GREEN}使用域名 / Using domain: $DOMAIN${NC}"
+# Detect public IP as fallback domain
+detect_ip() {
+  curl -s --max-time 5 https://api.ipify.org 2>/dev/null \
+    || hostname -I | awk '{print $1}' \
+    || echo "localhost"
+}
+DOMAIN="${DOMAIN:-$(detect_ip)}"
 
-# 1. 更新系统 / Update system
-echo -e "\n${YELLOW}[1/10] 更新系统... / Updating system...${NC}"
-apt update && apt upgrade -y
+DB_PASSWORD="${DB_PASSWORD:-$(openssl rand -hex 16)}"
+SECRET_KEY="${SECRET_KEY:-$(openssl rand -hex 32)}"
 
-# 2. 安装Docker / Install Docker
-echo -e "\n${YELLOW}[2/10] 安装Docker... / Installing Docker...${NC}"
-if ! command -v docker &> /dev/null; then
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sh get-docker.sh
-    rm get-docker.sh
+info "Install directory : $INSTALL_DIR"
+info "Domain / IP       : $DOMAIN"
+info "HTTP port         : $HTTP_PORT"
+info "SSL               : $CONFIGURE_SSL"
+echo ""
+
+# ── Step 1: System update ────────────────────────────────────────────────────
+info "[1/9] Updating system packages..."
+apt-get update -qq && apt-get upgrade -y -qq
+success "System updated"
+
+# ── Step 2: Install Docker ───────────────────────────────────────────────────
+info "[2/9] Checking Docker..."
+if ! command -v docker &>/dev/null; then
+  info "Installing Docker..."
+  curl -fsSL https://get.docker.com | sh
+  systemctl enable docker --now
+  success "Docker installed"
 else
-    echo "Docker已安装 / Docker already installed"
+  success "Docker already installed ($(docker --version))"
 fi
 
-# 3. 安装Docker Compose / Install Docker Compose
-echo -e "\n${YELLOW}[3/10] 安装Docker Compose... / Installing Docker Compose...${NC}"
-if ! command -v docker compose &> /dev/null; then
-    apt install -y docker-compose-plugin
+# ── Step 3: Install Docker Compose plugin ────────────────────────────────────
+info "[3/9] Checking Docker Compose..."
+if ! docker compose version &>/dev/null; then
+  apt-get install -y -qq docker-compose-plugin
+  success "Docker Compose installed"
 else
-    echo "Docker Compose已安装 / Docker Compose already installed"
+  success "Docker Compose already installed"
 fi
 
-# 4. 克隆仓库 / Clone repository
-echo -e "\n${YELLOW}[4/10] 克隆仓库... / Cloning repository...${NC}"
-if [ ! -d "/var/www/beyondacademic" ]; then
-    mkdir -p /var/www/beyondacademic
-    cd /var/www/beyondacademic
-    git clone https://github.com/wangdajin062/BeyondAcademic.git .
+# ── Step 4: Clone / update repository ────────────────────────────────────────
+info "[4/9] Fetching application source..."
+if [[ ! -d "$INSTALL_DIR/.git" ]]; then
+  mkdir -p "$INSTALL_DIR"
+  git clone --depth 1 https://github.com/wangdajin062/BeyondAcademic.git "$INSTALL_DIR"
+  success "Repository cloned to $INSTALL_DIR"
 else
-    cd /var/www/beyondacademic
-    git pull
+  git -C "$INSTALL_DIR" pull --ff-only
+  success "Repository updated"
 fi
+cd "$INSTALL_DIR"
 
-# 5. 配置环境变量 / Configure environment
-echo -e "\n${YELLOW}[5/10] 配置环境变量... / Configuring environment...${NC}"
-if [ ! -f ".env" ]; then
-    cp .env.production .env
-    
-    # 生成密钥 / Generate secret key
-    SECRET_KEY=$(openssl rand -hex 32)
-    DB_PASSWORD=$(openssl rand -hex 16)
-    
-    # 更新.env文件 / Update .env file
-    sed -i "s/your_very_secure_database_password_here_min_16_chars/$DB_PASSWORD/g" .env
-    sed -i "s/your_secret_key_here_must_be_at_least_32_characters_long_and_random/$SECRET_KEY/g" .env
-    sed -i "s/yourdomain.com/$DOMAIN/g" .env
-    
-    echo -e "${GREEN}环境变量已配置 / Environment configured${NC}"
-    echo -e "${YELLOW}请编辑 .env 文件添加其他必要配置 / Please edit .env file to add other necessary configurations${NC}"
+# ── Step 5: Environment file ─────────────────────────────────────────────────
+info "[5/9] Configuring environment..."
+if [[ "$CONFIGURE_SSL" == "yes" ]]; then
+  ALLOWED_ORIGINS="https://${DOMAIN},https://www.${DOMAIN}"
 else
-    echo ".env文件已存在，跳过 / .env file exists, skipping"
+  ALLOWED_ORIGINS="http://${DOMAIN},http://localhost"
 fi
 
-# 6. 创建必要目录 / Create necessary directories
-echo -e "\n${YELLOW}[6/10] 创建目录... / Creating directories...${NC}"
+cat > .env <<EOF
+# Auto-generated by deploy.sh — $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+DB_PASSWORD=${DB_PASSWORD}
+SECRET_KEY=${SECRET_KEY}
+ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+OPENAI_API_KEY=${OPENAI_API_KEY:-}
+ENVIRONMENT=production
+HTTP_PORT=${HTTP_PORT}
+EOF
+success "Environment file written"
+
+# ── Step 6: Create required directories ──────────────────────────────────────
+info "[6/9] Preparing directories..."
 mkdir -p certbot/conf certbot/www backend/logs
+chmod 755 backend/logs
+success "Directories ready"
 
-# 7. 配置Nginx / Configure Nginx
-echo -e "\n${YELLOW}[7/10] 配置Nginx... / Configuring Nginx...${NC}"
-sed -i "s/yourdomain.com/$DOMAIN/g" nginx/conf.d/beyondacademic.conf
+# ── Step 7: Build and start core services ────────────────────────────────────
+info "[7/9] Building and starting services (this may take a few minutes)..."
 
-# 8. 启动服务 / Start services
-echo -e "\n${YELLOW}[8/10] 启动服务... / Starting services...${NC}"
-docker compose -f docker-compose.prod.yml up -d db redis backend
+if [[ "$CONFIGURE_SSL" == "yes" ]]; then
+  COMPOSE_FILE="docker-compose.prod.yml"
 
-# 等待数据库就绪 / Wait for database
-echo "等待数据库启动... / Waiting for database..."
-sleep 10
+  # Patch domain into nginx prod conf
+  sed -i "s/yourdomain\.com/${DOMAIN}/g" nginx/conf.d/beyondacademic.conf
 
-# 9. 获取SSL证书 / Get SSL certificate
-echo -e "\n${YELLOW}[9/10] 获取SSL证书... / Getting SSL certificate...${NC}"
-read -p "是否配置SSL? (y/n) / Configure SSL? (y/n): " CONFIGURE_SSL
+  docker compose -f "$COMPOSE_FILE" pull --quiet db redis 2>/dev/null || true
+  docker compose -f "$COMPOSE_FILE" up -d --build db redis backend frontend
 
-if [ "$CONFIGURE_SSL" = "y" ]; then
-    read -p "请输入邮箱地址 / Enter email address: " EMAIL
-    
-    # 首次获取证书需要临时启动Nginx / First-time cert requires temporary Nginx
-    docker compose -f docker-compose.prod.yml up -d nginx
-    
-    # 运行certbot / Run certbot
-    docker compose -f docker-compose.prod.yml run --rm certbot certonly --webroot \
-        --webroot-path=/var/www/certbot \
-        --email $EMAIL \
-        --agree-tos \
-        --no-eff-email \
-        -d $DOMAIN -d www.$DOMAIN
-    
-    # 重启Nginx以应用证书 / Restart Nginx to apply certificate
-    docker compose -f docker-compose.prod.yml restart nginx
+  info "Waiting for backend to be ready..."
+  timeout 120 bash -c 'until docker compose -f docker-compose.prod.yml exec -T backend curl -sf http://localhost:8000/health; do sleep 3; done' \
+    || warn "Backend health check timed out — check logs if issues persist"
+
+  # Obtain SSL cert before starting nginx with HTTPS config
+  if [[ -n "${SSL_EMAIL:-}" ]]; then
+    docker compose -f "$COMPOSE_FILE" run --rm certbot certonly --webroot \
+      --webroot-path=/var/www/certbot \
+      --email "$SSL_EMAIL" --agree-tos --no-eff-email \
+      -d "$DOMAIN" -d "www.${DOMAIN}" \
+      && success "SSL certificate obtained" \
+      || warn "SSL certificate failed — nginx will start without HTTPS"
+  else
+    warn "SSL_EMAIL not set — skipping certificate issuance"
+  fi
+
+  docker compose -f "$COMPOSE_FILE" up -d --build
+else
+  COMPOSE_FILE="docker-compose.yml"
+  docker compose -f "$COMPOSE_FILE" pull --quiet db redis 2>/dev/null || true
+  docker compose -f "$COMPOSE_FILE" up -d --build
+
+  info "Waiting for backend to be ready..."
+  timeout 120 bash -c 'until docker compose exec -T backend curl -sf http://localhost:8000/health; do sleep 3; done' \
+    || warn "Backend health check timed out — check logs if issues persist"
 fi
 
-# 10. 启动所有服务 / Start all services
-echo -e "\n${YELLOW}[10/10] 启动所有服务... / Starting all services...${NC}"
-docker compose -f docker-compose.prod.yml up -d
+success "All services started"
 
-# 检查服务状态 / Check service status
-echo -e "\n${GREEN}检查服务状态... / Checking service status...${NC}"
-docker compose -f docker-compose.prod.yml ps
+# ── Step 8: Health verification ───────────────────────────────────────────────
+info "[8/9] Verifying deployment..."
+sleep 5
+HEALTH=$(curl -sf "http://localhost:${HTTP_PORT}/health" 2>/dev/null || echo "unreachable")
+if echo "$HEALTH" | grep -q "healthy"; then
+  success "Health check passed: $HEALTH"
+else
+  warn "Health check returned: $HEALTH"
+  warn "Check logs: docker compose -f $INSTALL_DIR/$COMPOSE_FILE logs -f"
+fi
 
-# 完成 / Done
-echo -e "\n${GREEN}=================================="
-echo "部署完成! / Deployment Complete!"
-echo "==================================${NC}"
+# ── Step 9: Summary ───────────────────────────────────────────────────────────
+info "[9/9] Deployment complete!"
 echo ""
-echo "访问您的应用 / Access your application:"
-echo "  - https://$DOMAIN"
-echo "  - API文档 / API Docs: https://$DOMAIN/docs"
+echo -e "${GREEN}╔══════════════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║   BeyondAcademic is running!                         ║${NC}"
+echo -e "${GREEN}╚══════════════════════════════════════════════════════╝${NC}"
 echo ""
-echo "查看日志 / View logs:"
-echo "  docker compose -f docker-compose.prod.yml logs -f"
+if [[ "$CONFIGURE_SSL" == "yes" ]]; then
+  echo "  App:      https://${DOMAIN}"
+  echo "  API docs: https://${DOMAIN}/docs"
+else
+  echo "  App:      http://${DOMAIN}:${HTTP_PORT}"
+  echo "  API docs: http://${DOMAIN}:${HTTP_PORT}/docs"
+fi
 echo ""
-echo "停止服务 / Stop services:"
-echo "  docker compose -f docker-compose.prod.yml down"
+echo "  Install dir: $INSTALL_DIR"
 echo ""
-echo -e "${YELLOW}重要提示 / Important Notes:${NC}"
-echo "  1. 请编辑 .env 文件添加 API 密钥"
-echo "  2. 配置防火墙只开放 80 和 443 端口"
-echo "  3. 定期备份数据库"
+echo "Useful commands:"
+echo "  View logs:     docker compose -f $INSTALL_DIR/$COMPOSE_FILE logs -f"
+echo "  Stop:          docker compose -f $INSTALL_DIR/$COMPOSE_FILE down"
+echo "  Restart:       docker compose -f $INSTALL_DIR/$COMPOSE_FILE restart"
+echo "  Update:        git -C $INSTALL_DIR pull && docker compose -f $INSTALL_DIR/$COMPOSE_FILE up -d --build"
+echo ""
+echo -e "${YELLOW}Demo login: tester / test123456${NC}"
 echo ""
