@@ -2,7 +2,7 @@
  * ArticleList Component
  * Displays list of articles with filtering options
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { articleAPI } from '../services/articleAPI';
 import { Article, ArticleStatus } from '../types/article';
@@ -14,11 +14,7 @@ export const ArticleList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<ArticleStatus | undefined>(undefined);
 
-  useEffect(() => {
-    loadArticles(); // eslint-disable-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
-
-  const loadArticles = async () => {
+  const loadArticles = useCallback(async () => {
     try {
       setLoading(true);
       const data = await articleAPI.listArticles(statusFilter);
@@ -30,7 +26,9 @@ export const ArticleList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
+
+  useEffect(() => { loadArticles(); }, [loadArticles]);
 
   const handleDelete = async (articleId: string) => {
     if (window.confirm('Are you sure you want to delete this article?')) {
