@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { LoginPage } from './components/LoginPage';
 import { ArticleList } from './components/ArticleList';
 import { AcademicEditor } from './components/AcademicEditor';
 import { LoginResponse } from './types/auth';
+import { articleAPI } from './services/articleAPI';
 
 // Simple auth context via localStorage
 function getStoredAuth(): LoginResponse | null {
@@ -40,17 +41,42 @@ function LoginRoute() {
 
 function EditorRoute() {
   const { articleId } = useParams<{ articleId: string }>();
+  const navigate = useNavigate();
   const [content, setContent] = useState('');
+  const [template, setTemplate] = useState('Generic');
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!articleId) return;
+    articleAPI.getArticle(articleId)
+      .then(article => {
+        setContent(article.content);
+        setTemplate(article.template || 'Generic');
+      })
+      .catch(() => setLoadError('Failed to load article'));
+  }, [articleId]);
+
+  const handleSave = async (updatedContent: string) => {
+    if (!articleId) return;
+    const auth = JSON.parse(localStorage.getItem('ba_auth') || '{}');
+    await articleAPI.updateArticle(articleId, { content: updatedContent }, auth.user?.username || 'default_user');
+  };
+
+  if (loadError) return <div style={{ padding: '16px', color: '#b00020' }}>{loadError}</div>;
 
   return (
     <div style={{ padding: '16px' }}>
-      <a href="/articles" style={{ marginBottom: '16px', display: 'inline-block' }}>
+      <button
+        onClick={() => navigate('/articles')}
+        style={{ marginBottom: '16px', background: 'none', border: 'none', cursor: 'pointer', color: '#1a2f5a', fontSize: '0.95rem' }}
+      >
         &larr; Back to Articles
-      </a>
+      </button>
       <AcademicEditor
         content={content}
-        template="Generic"
+        template={template}
         onChange={setContent}
+        onSave={handleSave}
       />
     </div>
   );

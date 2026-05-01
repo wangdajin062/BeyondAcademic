@@ -3,17 +3,19 @@
  * Displays list of articles with filtering options
  */
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { articleAPI } from '../services/articleAPI';
 import { Article, ArticleStatus } from '../types/article';
 
 export const ArticleList: React.FC = () => {
+  const navigate = useNavigate();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<ArticleStatus | undefined>(undefined);
 
   useEffect(() => {
-    loadArticles();
+    loadArticles(); // eslint-disable-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   const loadArticles = async () => {
@@ -83,7 +85,7 @@ export const ArticleList: React.FC = () => {
                 {article.abstract || article.content.substring(0, 150)}...
               </p>
               <div className="article-actions">
-                <button onClick={() => window.location.href = `/editor/${article.article_id}`}>
+                <button onClick={() => navigate(`/editor/${article.article_id}`)}>
                   Edit
                 </button>
                 <button onClick={() => handleDelete(article.article_id)}>

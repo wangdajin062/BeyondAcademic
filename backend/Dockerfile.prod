@@ -24,6 +24,7 @@ COPY . .
 
 # 创建非root用户 / Create non-root user
 RUN useradd -m -u 1000 appuser && \
+    mkdir -p /app/logs && \
     chown -R appuser:appuser /app
 
 # 切换到非root用户 / Switch to non-root user

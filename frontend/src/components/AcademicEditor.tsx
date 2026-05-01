@@ -2,7 +2,7 @@
  * AcademicEditor Component
  * Main editor interface with grammar checking and formatting
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { editorAPI } from '../services/editorAPI';
 import { recommendationAPI } from '../services/recommendationAPI';
 import { Suggestion } from '../types/editor';
@@ -12,16 +12,20 @@ interface AcademicEditorProps {
   content: string;
   template: string;
   onChange: (content: string) => void;
+  onSave?: (content: string) => Promise<void>;
 }
 
-export const AcademicEditor: React.FC<AcademicEditorProps> = ({ 
-  content, 
-  template, 
-  onChange 
+export const AcademicEditor: React.FC<AcademicEditorProps> = ({
+  content,
+  template,
+  onChange,
+  onSave
 }) => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [recommendations, setRecommendations] = useState<Paper[]>([]);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'editor' | 'suggestions' | 'recommendations'>('editor');
 
   const checkGrammar = async () => {
@@ -53,6 +57,21 @@ export const AcademicEditor: React.FC<AcademicEditorProps> = ({
     }
   };
 
+  const handleSave = async () => {
+    if (!onSave) return;
+    setSaving(true);
+    setSaveMessage(null);
+    try {
+      await onSave(content);
+      setSaveMessage('Saved');
+      setTimeout(() => setSaveMessage(null), 2000);
+    } catch {
+      setSaveMessage('Save failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const applySuggestion = (suggestion: Suggestion) => {
     const before = content.substring(0, suggestion.position);
     const after = content.substring(suggestion.position + suggestion.length);
@@ -66,6 +85,12 @@ export const AcademicEditor: React.FC<AcademicEditorProps> = ({
   return (
     <div className="academic-editor">
       <div className="editor-toolbar">
+        {onSave && (
+          <button onClick={handleSave} disabled={saving || loading} style={{ fontWeight: 600 }}>
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+        )}
+        {saveMessage && <span style={{ marginLeft: 8, color: saveMessage === 'Saved' ? 'green' : 'red' }}>{saveMessage}</span>}
         <button onClick={checkGrammar} disabled={loading}>
           Check Grammar & Formatting
         </button>
