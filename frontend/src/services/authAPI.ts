@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { LoginRequest, LoginResponse } from '../types/auth';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8765/api';
 
 export const authAPI = {
   async testLogin(payload: LoginRequest): Promise<LoginResponse> {

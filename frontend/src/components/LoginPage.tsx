@@ -17,6 +17,8 @@ export const LoginPage: React.FC = () => {
     try {
       const loginResult = await authAPI.testLogin({ username, password });
       setResult(loginResult);
+      localStorage.setItem('access_token', loginResult.access_token);
+      window.location.href = '/articles';
     } catch {
       setResult(null);
       setError('Login failed. Use tester/test123456 or researcher/Research@2026');
@@ -26,35 +28,41 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <main style={{ maxWidth: 520, margin: '48px auto', fontFamily: 'Arial, sans-serif' }}>
-      <h1>BeyondAcademic Test Login</h1>
-      <p>Use this page to verify authentication wiring in development and deployment.</p>
+    <div className="login-container">
+      <div className="login-card">
+        <h1 className="login-title">BeyondAcademic</h1>
+        <p className="login-subtitle">Academic Paper Writing Platform</p>
 
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
-        <label>
-          Username
-          <input value={username} onChange={(e) => setUsername(e.target.value)} style={{ width: '100%', padding: 8 }} />
-        </label>
-        <label>
-          Password
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: '100%', padding: 8 }} />
-        </label>
-        <button type="submit" disabled={loading} style={{ padding: 10 }}>
-          {loading ? 'Signing in...' : 'Sign in'}
-        </button>
-      </form>
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="form-group">
+            <label className="form-label">Username</label>
+            <input className="form-input" value={username} onChange={(e) => setUsername(e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <input className="form-input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </div>
+          <button type="submit" disabled={loading} className="btn btn-primary btn-block">
+            {loading ? 'Signing in...' : 'Sign in'}
+          </button>
+        </form>
 
-      {error && <p style={{ color: '#b00020', marginTop: 16 }}>{error}</p>}
+        {error && <p className="login-error">{error}</p>}
 
-      {result && (
-        <section style={{ marginTop: 20, padding: 12, background: '#f4f7ff', borderRadius: 8 }}>
-          <h2>Login Success</h2>
-          <p><strong>User:</strong> {result.user.display_name} ({result.user.username})</p>
-          <p><strong>Role:</strong> {result.user.role}</p>
-          <p><strong>Token expires:</strong> {new Date(result.expires_at).toLocaleString()}</p>
-          <code style={{ display: 'block', overflowWrap: 'anywhere' }}>{result.access_token}</code>
-        </section>
-      )}
-    </main>
+        {result && (
+          <div className="login-success">
+            <h3>Login Success</h3>
+            <p><strong>User:</strong> {result.user.display_name} ({result.user.username})</p>
+            <p><strong>Role:</strong> {result.user.role}</p>
+            <p><strong>Token expires:</strong> {new Date(result.expires_at).toLocaleString()}</p>
+            <code className="login-token">{result.access_token}</code>
+            <div className="login-success-actions">
+              <a href="/articles" className="btn btn-primary btn-sm">Go to Articles</a>
+              <a href="/workflows" className="btn btn-secondary btn-sm">Go to Workflows</a>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };

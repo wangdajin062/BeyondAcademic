@@ -3,10 +3,12 @@
  * Displays list of articles with filtering options
  */
 import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { articleAPI } from '../services/articleAPI';
 import { Article, ArticleStatus } from '../types/article';
 
 export const ArticleList: React.FC = () => {
+  const navigate = useNavigate();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,14 +48,16 @@ export const ArticleList: React.FC = () => {
   if (error) return <div className="error">{error}</div>;
 
   return (
-    <div className="article-list">
+    <div className="article-list-page">
       <div className="article-list-header">
         <h2>My Articles</h2>
-        <div className="filters">
+        <div className="article-list-actions">
+          <Link to="/workflows" className="article-workflows-link">Go to Workflows</Link>
+          <div className="filters">
           <label>
             Filter by status:
-            <select 
-              value={statusFilter || ''} 
+            <select
+              value={statusFilter || ''}
               onChange={(e) => setStatusFilter(e.target.value as ArticleStatus || undefined)}
             >
               <option value="">All</option>
@@ -64,12 +68,13 @@ export const ArticleList: React.FC = () => {
               <option value={ArticleStatus.PUBLISHED}>Published</option>
             </select>
           </label>
+            </div>
+          </div>
         </div>
-      </div>
-      
+
       <div className="articles">
         {articles.length === 0 ? (
-          <p>No articles found. Create your first article to get started!</p>
+          <p className="empty-state">No articles found. Create your first article to get started!</p>
         ) : (
           articles.map(article => (
             <div key={article.article_id} className="article-card">
@@ -80,11 +85,14 @@ export const ArticleList: React.FC = () => {
                 <span className="template">{article.template}</span>
               </div>
               <p className="article-excerpt">
-                {article.abstract || article.content.substring(0, 150)}...
+                {article.abstract || article.content?.substring(0, 150) || 'No content'}...
               </p>
               <div className="article-actions">
-                <button onClick={() => window.location.href = `/editor/${article.article_id}`}>
+                <button onClick={() => navigate(`/editor/${article.article_id}`)}>
                   Edit
+                </button>
+                <button onClick={() => navigate(`/write/${article.article_id}`)}>
+                  Write
                 </button>
                 <button onClick={() => handleDelete(article.article_id)}>
                   Delete

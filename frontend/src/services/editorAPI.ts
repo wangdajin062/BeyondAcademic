@@ -5,7 +5,7 @@
 import axios from 'axios';
 import { Suggestion, FormattingRule } from '../types/editor';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8765/api';
 
 export const editorAPI = {
   /**
